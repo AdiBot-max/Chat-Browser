@@ -1,0 +1,12 @@
+body{font-family:Arial,sans-serif;margin:0;padding:0}
+.container{max-width:800px;margin:20px auto;padding:20px;border-radius:10px;box-shadow:0 0 15px rgba(0,0,0,0.2);background-color:var(--bg-color);transition:background-color 0.3s}
+h3,h4{margin:10px 0;color:var(--text-color)}
+input{padding:8px;margin:5px 0;border-radius:5px;border:1px solid #ccc;width:calc(100%-18px)}
+button{padding:8px 12px;margin:5px 0;border:none;border-radius:5px;cursor:pointer;background-color:var(--button-bg);color:var(--button-text);transition:all 0.2s}
+button:hover{opacity:0.8}
+.chat-box{border:1px solid gray;height:250px;overflow-y:auto;padding:10px;background-color:#f7f7f7;border-radius:5px}
+.friend-list li,.request-list li{display:flex;justify-content:space-between;padding:3px 0}
+.chat-container{display:flex;gap:20px;flex-wrap:wrap}
+.friends-section,.chat-section{flex:1 1 300px}
+:root.green{--bg-color:#d4f4dd;--text-color:#2f4f2f;--button-bg:#4CAF50;--button-text:white}
+:root.yellow{--bg-color:#fff8b0;--text-color:#6a5500;--button-bg:#FFCA28;--button-text:black}
