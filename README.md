@@ -23,11 +23,3 @@ A **safe multiplayer chat platform for Roblox players**, designed to allow real-
 - **Deployment:** Render, Docker-ready
 - **Authentication:** JWT + bcrypt
 
----
-
-## Getting Started (Development)
-
-### 1. Clone the repository
-```bash
-git clone https://github.com/YOUR_USERNAME/roblox-chat.git
-cd roblox-chat
