@@ -13,6 +13,8 @@
     "axios": "^1.5.0"
   },
   "devDependencies": {
-    "parcel": "^2.12.0"
-  }
+  "parcel": "^2.12.0",
+  "@parcel/transformer-react-refresh-wrap": "^2.12.0"
 }
+}
+
