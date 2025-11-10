@@ -37,26 +37,26 @@ app.get("*", (req, res) => {
 const onlineUsers = new Map(); // username → socket.id
 
 io.on("connection", (socket) => {
-  console.log("New connection:", socket.id);
+  console.log("🟢 New connection:", socket.id);
 
   socket.on("login", (username) => {
     onlineUsers.set(username, socket.id);
     socket.username = username;
-    console.log(`${username} connected`);
+    console.log(`✅ ${username} connected`);
   });
 
-  // 🔹 send friend request
+  // 🔹 Friend request system
   socket.on("sendRequest", async ({ from, to }) => {
     try {
-      const userTo = await User.findOne({ username: to });
-      if (!userTo) {
+      const receiver = await User.findOne({ username: to });
+      if (!receiver) {
         socket.emit("alert", "User not found");
         return;
       }
 
-      if (!userTo.requests.includes(from)) {
-        userTo.requests.push(from);
-        await userTo.save();
+      if (!receiver.requests.includes(from)) {
+        receiver.requests.push(from);
+        await receiver.save();
       }
 
       socket.emit("alert", `Friend request sent to ${to}`);
@@ -66,56 +66,53 @@ io.on("connection", (socket) => {
         io.to(targetSocket).emit("newRequest", from);
       }
     } catch (err) {
-      console.error("Send request error:", err);
+      console.error("❌ sendRequest error:", err);
     }
   });
 
-  // 🔹 accept friend request
   socket.on("acceptRequest", async ({ from, to }) => {
     try {
-      const user = await User.findOne({ username: to });
-      const requester = await User.findOne({ username: from });
-      if (!user || !requester) return;
+      const receiver = await User.findOne({ username: to });
+      const sender = await User.findOne({ username: from });
+      if (!receiver || !sender) return;
 
-      if (!user.friends.includes(from)) user.friends.push(from);
-      if (!requester.friends.includes(to)) requester.friends.push(to);
-      user.requests = user.requests.filter((r) => r !== from);
+      if (!receiver.friends.includes(from)) receiver.friends.push(from);
+      if (!sender.friends.includes(to)) sender.friends.push(to);
+      receiver.requests = receiver.requests.filter((r) => r !== from);
 
-      await user.save();
-      await requester.save();
+      await receiver.save();
+      await sender.save();
 
       socket.emit("alert", `You and ${from} are now friends!`);
-      const requesterSocket = onlineUsers.get(from);
-      if (requesterSocket) {
-        io.to(requesterSocket).emit("friendAdded", to);
-      }
+      const senderSocket = onlineUsers.get(from);
+      if (senderSocket) io.to(senderSocket).emit("friendAdded", to);
     } catch (err) {
-      console.error("Accept request error:", err);
+      console.error("❌ acceptRequest error:", err);
     }
   });
 
-  // 🔹 send + receive message live
+  // 🔹 Messaging system
   socket.on("sendMessage", async ({ from, to, text }) => {
     try {
-      const newMsg = new Message({ from, to, text, timestamp: new Date() });
-      await newMsg.save();
+      if (!from || !to || !text.trim()) return;
+      const msg = new Message({ from, to, text, timestamp: new Date() });
+      await msg.save();
 
+      // deliver to both sender and receiver live
+      socket.emit("receiveMessage", msg);
       const targetSocket = onlineUsers.get(to);
-      if (targetSocket) {
-        io.to(targetSocket).emit("receiveMessage", { from, text, timestamp: newMsg.timestamp });
-      }
-      socket.emit("receiveMessage", { from, text, timestamp: newMsg.timestamp });
+      if (targetSocket) io.to(targetSocket).emit("receiveMessage", msg);
     } catch (err) {
-      console.error("Message send error:", err);
-      socket.emit("alert", "Failed to send message");
+      console.error("❌ sendMessage error:", err);
+      socket.emit("alert", "Message failed");
     }
   });
 
   socket.on("disconnect", () => {
     if (socket.username) onlineUsers.delete(socket.username);
-    console.log(`${socket.username || socket.id} disconnected`);
+    console.log(`🔴 ${socket.username || socket.id} disconnected`);
   });
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
