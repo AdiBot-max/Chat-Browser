@@ -1,131 +1,44 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
-import axios from "axios";
-import "./styles.css";
 
-const BASE_URL = window.location.origin;
-const socket = io(BASE_URL);
+const socket = io();
 
-export default function Chat({ user }) {
+export default function Chat({ username, friend }) {
   const [message, setMessage] = useState("");
-  const [chat, setChat] = useState([]);
-  const [to, setTo] = useState("");
-  const [friends, setFriends] = useState([]);
-  const [requests, setRequests] = useState([]);
-  const chatEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const loadFriends = async () => {
-    const res = await axios.get(`${BASE_URL}/users/friends/${user.username}`);
-    setFriends(res.data.friends);
-    setRequests(res.data.requests);
-  };
+  const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    loadFriends();
-    socket.emit("login", user.username);
-
-    socket.on("receiveMessage", (msg) => setChat((prev) => [...prev, msg]));
-
-    // ✅ new live request events
-    socket.on("newRequest", (from) => {
-      setRequests((prev) => [...prev, from]);
-      alert(`${from} sent you a friend request!`);
-    });
-
-    socket.on("friendAdded", (friend) => {
-      setFriends((prev) => [...prev, friend]);
-      alert(`${friend} accepted your friend request!`);
-    });
-
-    return () => {
-      socket.off("receiveMessage");
-      socket.off("newRequest");
-      socket.off("friendAdded");
-    };
-  }, [user]);
+    socket.emit("login", username);
+  }, [username]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [chat]);
+    socket.on("receiveMessage", (msg) => {
+      setMessages((prev) => [...prev, msg]);
+    });
+    return () => socket.off("receiveMessage");
+  }, []);
 
   const sendMessage = () => {
-    if (!to || !message) return;
-    socket.emit("sendMessage", { from: user.username, to, message });
+    if (message.trim() === "") return;
+    socket.emit("sendMessage", { from: username, to: friend, text: message });
     setMessage("");
   };
 
-  // ✅ Updated sendRequest to notify server socket
-  const sendRequest = async (friend) => {
-    if (!friend) return;
-    try {
-      await axios.post(`${BASE_URL}/users/request`, { from: user.username, to: friend });
-      socket.emit("sendRequest", { from: user.username, to: friend }); // realtime emit
-      alert(`Friend request sent to ${friend}`);
-    } catch (err) {
-      alert(err.response?.data.error || "Error");
-    }
-  };
-
-  // ✅ Updated acceptRequest to notify both users
-  const acceptRequest = async (friend) => {
-    try {
-      await axios.post(`${BASE_URL}/users/accept`, { from: friend, to: user.username });
-      socket.emit("acceptRequest", { from: friend, to: user.username }); // realtime emit
-      loadFriends();
-    } catch (err) {
-      alert(err.response?.data.error || "Error");
-    }
-  };
-
   return (
-    <div className="chat-container">
-      <div className="friends-section">
-        <h3>Friends</h3>
-        <ul className="friend-list">{friends.map(f => <li key={f}>{f}</li>)}</ul>
-        <h4>Requests</h4>
-        <ul className="request-list">
-          {requests.map(r => (
-            <li key={r}>
-              {r} <button onClick={() => acceptRequest(r)}>Accept</button>
-            </li>
-          ))}
-        </ul>
-        <input
-          placeholder="Add friend by username"
-          onKeyDown={e => {
-            if (e.key === "Enter") {
-              sendRequest(e.target.value);
-              e.target.value = "";
-            }
-          }}
-        />
+    <div className="chat-box">
+      <div className="messages">
+        {messages.map((m, i) => (
+          <div key={i}>
+            <strong>{m.from}:</strong> {m.text}
+          </div>
+        ))}
       </div>
-
-      <div className="chat-section">
-        <h3>Chat</h3>
-        <input placeholder="Send to (username)" value={to} onChange={e => setTo(e.target.value)} />
-        <div className="chat-box">
-          {chat.map((m, i) => (
-            <div key={i}>
-              <b>{m.from}:</b> {m.message}
-            </div>
-          ))}
-          <div ref={chatEndRef}></div>
-        </div>
-        <input
-          placeholder="Type your message..."
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === "Enter") sendMessage();
-          }}
-        />
-        <button onClick={sendMessage}>Send</button>
-      </div>
+      <input
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Type your message..."
+      />
+      <button onClick={sendMessage}>Send</button>
     </div>
   );
 }
