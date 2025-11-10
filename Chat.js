@@ -27,8 +27,25 @@ export default function Chat({ user }) {
   useEffect(() => {
     loadFriends();
     socket.emit("login", user.username);
+
     socket.on("receiveMessage", (msg) => setChat((prev) => [...prev, msg]));
-    return () => socket.off("receiveMessage");
+
+    // ✅ new live request events
+    socket.on("newRequest", (from) => {
+      setRequests((prev) => [...prev, from]);
+      alert(`${from} sent you a friend request!`);
+    });
+
+    socket.on("friendAdded", (friend) => {
+      setFriends((prev) => [...prev, friend]);
+      alert(`${friend} accepted your friend request!`);
+    });
+
+    return () => {
+      socket.off("receiveMessage");
+      socket.off("newRequest");
+      socket.off("friendAdded");
+    };
   }, [user]);
 
   useEffect(() => {
@@ -41,19 +58,23 @@ export default function Chat({ user }) {
     setMessage("");
   };
 
+  // ✅ Updated sendRequest to notify server socket
   const sendRequest = async (friend) => {
     if (!friend) return;
     try {
       await axios.post(`${BASE_URL}/users/request`, { from: user.username, to: friend });
+      socket.emit("sendRequest", { from: user.username, to: friend }); // realtime emit
       alert(`Friend request sent to ${friend}`);
     } catch (err) {
       alert(err.response?.data.error || "Error");
     }
   };
 
+  // ✅ Updated acceptRequest to notify both users
   const acceptRequest = async (friend) => {
     try {
       await axios.post(`${BASE_URL}/users/accept`, { from: friend, to: user.username });
+      socket.emit("acceptRequest", { from: friend, to: user.username }); // realtime emit
       loadFriends();
     } catch (err) {
       alert(err.response?.data.error || "Error");
