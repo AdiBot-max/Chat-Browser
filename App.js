@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Signup from "./Signup.js";
 import Login from "./Login.js";
 import Chat from "./Chat.js";
-import ThemeSwitcher from "./ThemeSwitcher.js";
+import ThemeSwitcher from "./ThemeSwitcher.jsx";
 import "./styles.css";
 
 export default function App() {
@@ -28,3 +28,4 @@ export default function App() {
     </div>
   );
 }
+
