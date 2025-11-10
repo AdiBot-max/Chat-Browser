@@ -62,7 +62,8 @@ button:hover {
   transition: background-color 0.4s ease;
 }
 
-.friend-list li, .request-list li {
+.friend-list li,
+.request-list li {
   display: flex;
   justify-content: space-between;
   padding: 5px 0;
@@ -74,11 +75,12 @@ button:hover {
   flex-wrap: wrap;
 }
 
-.friends-section, .chat-section {
+.friends-section,
+.chat-section {
   flex: 1 1 300px;
 }
 
-/* 🌾 AUTUMN SEASON THEME */
+/* 🌾 AUTUMN SEASON */
 :root.autumn {
   --bg-color: #fff4e0;
   --text-color: #4a2c0a;
@@ -87,7 +89,7 @@ button:hover {
   --chat-bg: #ffe8cc;
 }
 
-/* 🌧️ RAINY SEASON THEME */
+/* 🌧️ RAINY SEASON */
 :root.rainy {
   --bg-color: #dbe9f5;
   --text-color: #0b305b;
@@ -96,7 +98,7 @@ button:hover {
   --chat-bg: #ecf6ff;
 }
 
-/* ✨ THEME TOGGLE BUTTON */
+/* ✨ THEME TOGGLE */
 .theme-toggle {
   background: linear-gradient(135deg, var(--button-bg), var(--button-text));
   color: var(--text-color);
